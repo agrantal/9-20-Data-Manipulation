@@ -1,7 +1,8 @@
 ---
-title: "9-20 Data Manipulation"
+title: "Lecture 5 - Data Manipulation"
 output: html_document
 ---
+
 ```{r}
 library(tidyverse)
 
@@ -12,55 +13,76 @@ getwd()
 
 # Import and organize data 
 ```{r}
-litters_data = read_csv(file = "./data_import_files/FAS_litters.csv",
-  col_types = "ccddiiii") 
-# remember from last lecture, the file directory above is abbreviated  
+litters_data = read_csv(file = "./sample data/FAS_litters.csv",
+  col_types = "ccddiiii") #c indicates the first col is a character, d = decimal/double, i = integer
   
 litters_data = janitor::clean_names(litters_data)
 
-pups_data = read_csv("./data_import_files/FAS_pups.csv",
+pups_data = read_csv("./sample data/FAS_pups.csv",
   col_types = "ciiiii")
 pups_data = janitor::clean_names(pups_data)
 ```
 
-# Select and Rename data observations/obs
+# Select & Rename columns 
 
 ```{r}
-select(litters_data, group, litter_number, gd0_weight, pups_born_alive)
-select(litters_data, group:gd_of_birth)
-select(litters_data, -pups_survive) #add a negative sign to remove pups_survive
-select(litters_data, GROUP = group, LiTtEr_NuMbEr = litter_number) #select before renaming
-rename(litters_data, GROUP = group, LiTtEr_NuMbEr = litter_number) #rename variables. more useful for changing only a couple vars bc by hand
+select(litters_data, group, litter_number, gd0_weight, pups_born_alive) # select by writing the dataset name followed by a list of col names to keep 
+
+select(litters_data, group:gd_of_birth) #instead of listing as we first did, you can identify a range of columns to keep using :
+
+select(litters_data, -pups_survive) #instead of indicating which to keep, can indicate which to remove by adding a neg sign in front of each listed col name
+
+select(litters_data, GROUP = group, LiTtEr_NuMbEr = litter_number) #selects & renames at the same time. new name = old name
+
+rename(litters_data, GROUP = group, LiTtEr_NuMbEr = litter_number) #rename variables if don't need to also select certain cols. this is more useful for changing only a couple vars bc by hand
+
 select(litters_data, litter_number, group, everything()) #currently the group values are on the far left hand side of the dataset. use this to select and move all of the litter_number obs from the second-to-left column position to the far left position. 
-select (litters_data, starts_with("gd")) #select all obs in the litters_data that starts with "gd". Other commands include "contains(), ends_with(), etc" - can look up more in the help tab 
+
+select (litters_data, starts_with("gd")) #select all obs in the litters_data that starts with "gd". Other commands include "contains(), ends_with(), starts_with()" - can look up more in the help tab 
+```
+
+#Learning Assessment
+```{r}
 select(pups_data, litter_number, sex, pd_ears) #select the columns containing litter number, sex, and PD ears
 ```
 
-#Filters
-```{r}
-#examples of filters:
-filter(pups_data, gd_of_birth == 20)
-filter(pups_data, pups_born_alive >= 2)
-filter(pups_data, pups_survive != 4           # ! negates what follows it 
-filter(pups_data, !(pups_survive == 4)
-filter(pups_data, group %in% c("Con7", "Con8")    #could also write group == "Con7"" | group == "Con8"   |=or, &=and 
-filter(pups_data, group == "Con7" & gd_of_birth == 20
-filter(pups_data, !is.na(wt_increase)         # na = missing obs
-       
-filter(pups_data, sex == 1)   #Filter to include only pups with sex 1
-filter(pups_data, sex == 2, pd_walk < 11) #include only pups with PD walk less than 11 and sex 2
+Note: using 'select' will export a dataframe even if you only select one column. Mostly this is fine, but sometimes you want the vector stored in the column. To pull a single variable, use 'pull'.
 
+#Filter
+
+```{r}
+#examples of filters that select obs if they're >,==, etc a certain value
+filter(pups_data, gd_of_birth == 20)        
+filter(pups_data, pups_born_alive >= 2)
+filter(pups_data, pups_survive != 4)          # ! negates what follows it 
+filter(pups_data, !(pups_survive == 4))
+filter(pups_data, group %in% c("Con7", "Con8"))    #could also write group == "Con7"" | group == "Con8"   |=or, &=and 
+filter(pups_data, group == "Con7" & gd_of_birth == 20)
+filter(pups_data, !is.na(wt_increase))        # na = missing obs
+```
+
+# learning Assessment
+
+```{r}
+filter(pups_data, sex == 1)   #Filter to include only pups with sex 1
+filter(pups_data, sex == 2, pd_walk < 11) #include only pups with PD walk less than 11 and sex equal to 2
 ```
 
 # Mutate
+Use 'mutate' if want to change, select, or create new columns
 ```{r}
-# if want to create or change variables (this is bascially what we did with creating vars in dataframes). This doesn't necessarily save the additions to the file. To do that you'd add "newdatasetname = ..." in front of the mutate command
-mutate(litters_data,
-  wt_gain = gd18_weight - gd0_weight, 
+# the following doesn't necessarily save the additions to the file. To do that you'd add "newdatasetname = ..." in front of the mutate command
+mutate(litters_data, 
+  wt_gain = gd18_weight - gd0_weight, #create new var 'wt_gain' that is a function of existing vars
   group = tolower(group)
 )
-mutate(pups_data, pivot_minus7 = pd_pivot - 7) #Create a variable that subtracts 7 from PD pivot
-mutate(pups_data, pd_sum = pd_ears + pd_eyes + pd_pivot + pd_walk) #Create a variable that is the sum of all the PD variables
+```
+
+# Learning Assessment
+
+```{r}
+mutate(pups_data, pivot_minus7 = pd_pivot - 7) #Create new var that subtracts 7 from PD pivot
+mutate(pups_data, pd_sum = pd_ears + pd_eyes + pd_pivot + pd_walk) #Create new var that is the sum of all the PD variables
 ```
 
 #Arrange
@@ -70,12 +92,17 @@ mutate(pups_data, pd_sum = pd_ears + pd_eyes + pd_pivot + pd_walk) #Create a var
 head(arrange(litters_data, group, pups_born_alive), 10)
 ```
 
-#PIPE: doing a multi-step procedure in a simpler way 
-```{r}
-#we want to load the data, clean the column names, remove 'pups_survive', and create  new var 'wt_gain'.
+There are a couple of options for doing multi-step data manipulation (importing, cleaning, selecting, etc):
+*define intermediate datasets (or overwrite data at each stage)
+*nest function calls
 
-##Option 1 without using mutate to create a clean /edited dataset:
-litters_data_raw = read_csv("./data/FAS_litters.csv",
+#PIPE %>% = to do a multi-step procedure in a simpler way 
+
+we want to load the data, clean the column names, remove 'pups_survive', and create  new var 'wt_gain'
+
+##Option 1 = without using mutate to create an edited dataset:
+```{r}
+litters_data_raw = read_csv("./sample data/FAS_litters.csv",
   col_types = "ccddiiii")
 litters_data_clean_names = janitor::clean_names(litters_data_raw)
 litters_data_selected_cols = select(litters_data_clean_names, -pups_survive)
@@ -83,14 +110,15 @@ litters_data_with_vars = mutate(litters_data_selected_cols,
   wt_gain = gd18_weight - gd0_weight,
   group = tolower(group))
 litters_data_with_vars
+```
 
-
-##Option 2 using mutate to create an edited dataset 'litters_data_clean' but still a little cumbersome bc have to read commands from inside out:
+##Option 2 = using mutate to create an edited dataset 'litters_data_clean' but still a little cumbersome bc have to read commands from inside out:
+```{r}
 litters_data_clean = 
   mutate(
     select(
       janitor::clean_names(
-        read_csv("./data/FAS_litters.csv", col_types = "ccddiiii")
+        read_csv("./sample data/FAS_litters.csv", col_types = "ccddiiii")
         ), 
     -pups_survive
     ),
@@ -98,11 +126,12 @@ litters_data_clean =
   group = tolower(group)
   )
 litters_data_clean
-
+```
 
 ##Option 3: using to mutate in simplest fashion (read outside in) to create an edited dataset 'litters_data' by selecting everything except pups_survive and then creating wt_gain and use %>% to plug it into the following command 
+```{r}
 litters_data = 
-  read_csv("./data/FAS_litters.csv", col_types = "ccddiiii") %>%
+  read_csv("./sample data/FAS_litters.csv", col_types = "ccddiiii") %>%
   janitor::clean_names() %>% 
 #the following lines take the output from the previous three lines and plugs it into later commands
   select(-pups_survive) %>%
@@ -114,10 +143,25 @@ litters_data
 
 #the folowing does the same thing as above but uses a placeholder dataset '.' which is created by 'dat = .' :
 litters_data = 
-  read_csv("./data/FAS_litters.csv", col_types = "ccddiiii") %>%
+  read_csv("./sample data/FAS_litters.csv", col_types = "ccddiiii") %>%
   janitor::clean_names(dat = .) %>%
   select(.data = ., -pups_survive) %>%
   mutate(.data = .,
     wt_gain = gd18_weight - gd0_weight,
     group = tolower(group))
+#the placeholder is more necessary/useful in the following example:
+litters_data %>%
+  lm(wt_gain ~ pups_born_alive, data = .) %>%
+  broom::tidy()
+```
+
+# Learning Assessment:
+```{r}
+pups_data = 
+  read_csv("./sample data/FAS_pups.csv", col_types = "ciiiii") %>%
+  janitor::clean_names() %>%
+  filter(sex == 1) %>%
+  select(-pd_ears) %>%
+  mutate(pd_pivot_gt7 = pd_pivot > 7)
+
 ```
